@@ -2,6 +2,63 @@
 // Brighter Tools: Support Page & Login Styling
 if ( ! defined( 'ABSPATH' ) ) exit;
 
+// Design Credit Hook  
+add_action( 'wp_footer', function () {
+    // Dynamically get site info
+    $site_name = get_bloginfo( 'name' );
+    $site_url  = home_url();
+
+    // Hidden attribution comment
+    echo "\n<!-- Website built by Brighter Websites - https://brighterwebsites.com.au -->\n";
+
+    // Publisher meta tag
+    echo "\n<meta name=\"publisher\" content=\"Brighter Websites\">\n";
+
+    // Schema JSON-LD
+    echo '
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "' . esc_js( $site_name ) . '",
+  "url": "' . esc_url( $site_url ) . '",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Brighter Websites",
+    "url": "https://brighterwebsites.com.au"
+  }
+}
+</script>
+';
+}, 99 );
+
+function brighter_credit_shortcode() {
+    // Hide only on blog post single views
+    if ( is_single() && get_post_type() === 'post' ) {
+        return '';
+    }
+
+    // Get site name and convert to slug
+    $site_name   = get_bloginfo( 'name' );
+    $utm_source  = sanitize_title( $site_name );
+
+    // Build tracked URL
+    $url = 'https://brighterwebsites.com.au/?utm_source=' . $utm_source . '&utm_medium=footer&utm_campaign=site-credit';
+
+    // Return the credit
+    return 'Proudly Built by <a href="' . esc_url( $url ) . '" target="_blank" rel="noopener"><strong>BRIGHTER WEBSITES</strong></a>';
+}
+add_shortcode( 'brighter_credit', 'brighter_credit_shortcode' );
+
+
+//Skip link
+add_action( 'wp_body_open', 'brighter_skip_link' );
+function brighter_skip_link() {
+    echo '<a class="skip-link screen-reader-text" href="#main-content">Skip to main content</a>';
+}
+
+
+
 
 // Brighter Support Admin Page with Tabs and Dynamic Manual Links
 
@@ -19,13 +76,14 @@ function brighter_support_add_menu() {
 }
 
 
-
+// Render CSS
 function brighter_enqueue_admin_support_styles($hook) {
     if (strpos($hook, 'brighter_support') !== false) {
         wp_enqueue_style('brighter-admin-support', plugin_dir_url(__FILE__) . '../css/admin-support.css');
     }
 }
 add_action('admin_enqueue_scripts', 'brighter_enqueue_admin_support_styles');
+
 
 
 function brighter_support_render_page() {
@@ -41,28 +99,46 @@ function brighter_support_render_page() {
     if (in_array($email, $admin_emails)) {
         echo '<a href="?page=brighter_support&tab=manuals" class="nav-tab ' . ($active_tab == 'manuals' ? 'nav-tab-active' : '') . '">Manual Links</a>';
     }
-    
     echo '<a href="?page=brighter_support&tab=business_info" class="nav-tab ' . ($active_tab == 'business_info' ? 'nav-tab-active' : '') . '">Business Info</a>';
-
+    
+    echo '<a href="?page=brighter_support&tab=optimisation" class="nav-tab ' . ($active_tab == 'optimisation' ? 'nav-tab-active' : '') . '">Optimisation</a>';
     echo '</nav>';
+    
 
     if ($active_tab === 'manuals' && in_array($email, $admin_emails)) {
+     echo '<div class="support-page">';
     echo '<form method="post" action="options.php">';
     settings_fields('brighter_support_settings');
     do_settings_sections('brighter_support_page');
-    
-  
     submit_button('Save Manual Links');
+    echo '</div>';
     echo '</form>';
-} elseif ($active_tab === 'business_info' && current_user_can('manage_options')) {
-    brighterweb_render_business_info_form();
-} else {
-    brighter_support_output_main();
-}
+    
+        } elseif ($active_tab === 'business_info' && current_user_can('manage_options')) {
+            brighterweb_render_business_info_form();
+        } elseif ($active_tab === 'optimisation' && current_user_can('manage_options')) {
+            echo '<div class="support-page">';
+            echo '<form method="post" action="options.php">';
+            settings_fields('brighter_optimisation_settings');
+          
+            do_settings_sections('brighter_optimisation_page');
+            submit_button('Save Optimisation Settings');
+           
+            echo '</form>';
+            echo '</div>';
+        }
+        
+        else {
+            brighter_support_output_main();
+        }
 
 
     echo '</div>';
 }
+
+
+
+
 
 function brighter_support_output_main() {
     $site_url = site_url();
@@ -70,79 +146,82 @@ function brighter_support_output_main() {
     $manual_quick_link = esc_url(get_option('manual_quick_link', '#'));
     $website_ranking_link = esc_url(get_option('website_ranking_link', '#'));
     $map_ranking_link = esc_url(get_option('map_ranking_link', '#'));
+$logo_url = plugin_dir_url(__FILE__) . '../assets/brighter-logo.png';
+$site_url = get_site_url();
 
 
     echo '<div class="support-page">';
     
     echo '<div class="support-desc">';
-        echo '<p>We’ve created this page to help you confidently manage and maintain your website. Below are quick-access links and tips to get you started.</p>';
+        echo '<p>Weve created this page to help you confidently manage and maintain your website. Below are quick-access links and tips to get you started.</p>';
     echo '</div>';
     
     echo '<div class="support-container support-manual">';
         echo '<h2>ℹ️ Website Owners Manual</h2>';
-        echo '<ul>';
+        
          // Website Owners Manual
         if ($manual_full_link && $manual_full_link !== '#') {
-            echo '<li><strong>Full Manual:</strong> <a href="' . $manual_full_link . '" target="_blank">View Full Manual</a></li>';
+         
+            echo '<div class="bright-manual"><a href="' . $manual_full_link . '" target="_blank">Website Manual</a></div>';
+            
         } else {
-            echo '<li><strong>Full Manual:</strong> Coming Soon / Request <a href="mailto:support@brighterwebsites.com.au">support@brighterwebsites.com.au</a></li>';
+            echo '<div class="bright-manual">Full Manual:</strong> Coming Soon</div>';
             
         }
         if ($manual_quick_link && $manual_quick_link !== '#') {
-            echo '<li><strong>Quick Guide:</strong> <a href="' . $manual_quick_link . '" target="_blank">View Quick Guide</a></li>';
+          echo '<div class="bright-manual"><a href="' . $manual_quick_link . '" target="_blank">Quick Guide</a></div>';
         } else {
-            echo '<li><strong>Quick Guide:</strong> Coming Soon / Request <a href="mailto:support@brighterwebsites.com.au">support@brighterwebsites.com.au</a></li>';
+            echo '<div class="bright-manual"><strong>Quick Guide:</strong> Coming Soon</div>';
             
         }
-        echo '</ul>';
+       
     echo '</div>';
-     $logo_url = plugin_dir_url(__FILE__) . '../assets/brighter-logo.png';
 
+
+echo '<div class="support-container support-brand">';
+
+
+        echo '<h2>📝 Manage Your Content</h2>';
+       
+        echo '<table class="compare-table">';
+            echo '<thead><tr><th><a href="' . $site_url . '/wp-admin/edit.php" target="_blank">Posts</a></th><th><a href="' . $site_url . '/wp-admin/edit.php?post_type=page" target="_blank">Pages</a></th></tr></thead>';
+            echo '<tbody>';
+                echo '<tr><td>Appear in blog feed</td><td>Stand-alone content (like About or Contact)</td></tr>';
+                echo '<tr><td>Organised by date, category, tags</td><td>Organised hierarchically (parent/child)</td></tr>';
+                echo '<tr><td>Ideal for regular updates</td><td>Best for timeless content</td></tr>';
+            echo '</tbody>';
+        echo '</table>';
+
+
+
+echo '</div>';
+ 
+    
+    
     echo '<div class="support-container support-brand">';
         
-             echo '<img class="support-img" src="' . esc_url($logo_url) . '" alt="Support">';
+             
             
             echo '<div class="support-help">';
-                echo '<h2>🧰 Need Help?</h2>';
-                echo '<p>We’re here to help with technical issues, updates, or questions.</p>';
+                echo '<div class="support-help-inner">';
+                    echo '<img class="support-img" src="' . esc_url($logo_url) . '" alt="Support">';
+                    echo '<h2>🧰 Need Help?</h2>';
+                echo '</div>';
+                echo '<p>We’re here to help with technical issues, updates, or questions. Email us directly at <a href="mailto:support@brighterwebsites.com.au">support@brighterwebsites.com.au</a</p>';
+               
+                echo '<div class="bright-button"><a href="https://brighterwebsites.com.au/kb/" target="_blank">Website Knowledge Base</a></div>';
             echo '</div>';
         
             echo '<div class="support-tips">';
-                echo '<h3>💡 Quick Tips</h3>';
-                echo '<li><a href="https://brighterwebsites.com.au/topics/website-help/" target="_blank">How to manage your website</a></li>';
-            echo '</div>';
-            
-            echo '<div class="support-tips">';
-                echo '<h3>💡 Support </h3>';
-                echo '<ul>';
-                    echo '<li><a href="https://brighterwebsites.com.au/support/" target="_blank">Submit a Support Request</a></li>';
-                    echo '<li>Email us directly at <a href="mailto:support@brighterwebsites.com.au">support@brighterwebsites.com.au</a></li>';
-                echo '</ul>';
-            echo '</div>';
-        
-    echo '</div>';
-        
-
-    
-   
-    echo '<div class="support-container support-tools">';
-        echo '<h2>📣 Marketing Tools</h2>';
-        echo '<p><small>If these tools have been set up for you, Log in with your website Google Account, or as specified in your <strong>website owner manual</strong>.</small></p>';
-        echo '<ul>';
-        echo '<li><strong>Email Campaigns:</strong> <a href="http://dashboard.mailerlite.com" target="_blank">MailerLite Dashboard</a></li>';
-        echo '<li><strong>SMS Marketing:</strong> <a href="https://www.smsglobal.com/" target="_blank">SMSGlobal</a></li>';
-        echo '<li><strong>Social Media Management:</strong> <a href="https://www.postly.ai/" target="_blank">Postly</a></li>';
-        echo '<li><strong>Content copywriter:</strong> <a href="https://neuronwriter.com/" target="_blank">neuronwriter</a></li>';
-
-        echo '</ul>';
-    echo '</div>';
-    
-    echo '<div class="support-container support-search">';
+               
+   echo '<div class="support-container support-search">';
         echo '<h2>📈 Performance & Search</h2>';
-        echo '<p>Log in with your website Google Account.</p>';
+      echo '<p>If we set these up as part of your website package, you’ll find your account details in your Website Manual.</p>';
+
         echo '<ul>';
         echo '<li><strong>Google Search Console:</strong> <a href="https://search.google.com/search-console" target="_blank">Manage Search Performance</a></li>';
-        echo '<li><strong>Website Visitors:</strong> <a href="https://analytics.google.com" target="_blank">Google Analytics</a></li>';
+         echo '<li><strong>AHREFS SEO Health:</strong> <a href="https://app.ahrefs.com/site-audit" target="_blank">Site Audit</a></li>';
+        echo '<li><strong>Website Visitors:</strong> <a href="https://app.ahrefs.com/site-audit" target="_blank">Google Analytics</a></li>';
         echo '<li><strong>Check Speed:</strong> <a href="https://pagespeed.web.dev" target="_blank">PageSpeed Insights</a></li>';
         echo '</ul>';
         
@@ -150,38 +229,50 @@ function brighter_support_output_main() {
         if ($website_ranking_link && $website_ranking_link !== '#') {
             echo '<li><strong>SEO Website Ranking Report:</strong> <a href="' . $website_ranking_link . '" target="_blank">Open Tool</a></li>';
         } else {
-            echo '<li><small><strong>SEO Website Ranking Report:</strong> Request <a href="mailto:support@brighterwebsites.com.au">support@brighterwebsites.com.au</a></small></li>';
+            echo '<li><strong>SEO Website Ranking Report:</strong> Request <a href="mailto:support@brighterwebsites.com.au">support@brighterwebsites.com.au</a></li>';
         }
         // Ranks Pro - Map Ranking
         if ($map_ranking_link && $map_ranking_link !== '#') {
             echo '<li><strong>SEO Map Ranking Report:</strong> <a href="' . $map_ranking_link . '" target="_blank">Open Tool</a></li>';
         } else {
-            echo '<li><strong><small>SEO Map Ranking Report:</strong> Request <a href="mailto:support@brighterwebsites.com.au">support@brighterwebsites.com.au</a></small></li>';
+            echo '<li><strong>SEO Map Ranking Report:</strong> Request <a href="mailto:support@brighterwebsites.com.au">support@brighterwebsites.com.au</a></li>';
         }
     echo '</div>';
+ 
+   
+   
+    echo '<div class="support-container support-tools">';
+       
+       echo '<p><strong>📣 Recommended Tools</strong> – If these tools have been set up for you, you’ll find the login details in your <strong>Website Owner Manual</strong>.</p>';
+
+        echo '<ul>';
+        echo '<li><strong>Email Campaigns:</strong> <a href="http://dashboard.mailerlite.com" target="_blank">MailerLite Dashboard</a></li>';
+        echo '<li><strong>SMS Marketing:</strong> <a href="https://www.smsglobal.com/" target="_blank">SMSGlobal</a></li>';
+        echo '<li><strong>Social Media Management:</strong> <a href="https://www.postly.ai/" target="_blank">Postly</a></li>';
+        echo '<li><strong>Content copywriter:</strong> <a href="https://neuronwriter.com/" target="_blank">Neuronwriter</a></li>';
+
+        echo '</ul>';
+    echo '</div>';
+    
+  
     
         echo '<div class="support-container support-health">';
-        echo '<h2>🔒 Website Health</h2>';
-        echo '<p>Log in as admin to access website health.</p>';
+  
+        echo '<p>🔒 <strong>Admin Tools</strong> - Log in as admin to access website health.</p>';
         
         echo '<ul>';
-        echo '<li><strong>Check Website Health:</strong> <a href="' . esc_url( admin_url( 'site-health.php' ) ) . '" target="_blank">Site Health Tool</a></li>';
-
         echo '<li><strong>Check Website Health:</strong> <a href="' . $site_url . '/wp-admin/site-health.php" target="_blank">Site Health Tool</a></li>';
+       echo '<li><strong>Backups:</strong> <a href="' . $site_url . '/wp-admin/admin.php?page=WPvivid" target="_blank">Go to Backups</a></li>';
         echo '</ul>';
+        echo '<p>*Your website is automatically backed up monthly. If something goes wrong, contact us to restore a previous version.</p>';
     echo '</div>';
          
      
-    echo '<div class="support-container support-backup">';     
-        echo '<h2>🔒💾 Backup & Restore</h2>';
-        echo '<p>Your website is automatically backed up monthly. If something goes wrong, contact us to restore a previous version.</p>';
-        echo '<p>Log in as admin to access Backups.</p>';
-
-        echo '<ul>';
-        echo '<li><strong>Backups:</strong> <a href="' . $site_url . '/wp-admin/admin.php?page=WPvivid" target="_blank">Go to Backups</a></li>';
-        echo '</ul>';
-    echo '</div>';
+   
 }
+
+
+
 
 add_action('admin_init', function() {
     // Register all settings
@@ -191,34 +282,11 @@ add_action('admin_init', function() {
     register_setting('brighter_support_settings', 'map_ranking_link');
     register_setting('brighter_support_settings', 'brighter_login_logo');
     register_setting('brighter_support_settings', 'theme_colour');
-    register_setting('brighter_support_settings', 'image_max_dimension');
-    register_setting('brighter_support_settings', 'enable_image_resize');
-    register_setting('brighter_support_settings', 'enable_extra_image_sizes');
-
-    add_settings_field('enable_image_resize', 'Enable Image Resizing?', function() {
-        $enabled = get_option('enable_image_resize', 'yes');
-        echo '<label><input type="checkbox" name="enable_image_resize" value="yes" ' . checked('yes', $enabled, false) . '> Resize uploaded images</label>';
-        echo '<p class="description">If unchecked, original images will be stored without resizing.</p>';
-    }, 'brighter_support_page', 'manual_links_section');
-
- add_settings_field('image_max_dimension', 'Max Upload Dimension (px)', function() {
-        echo '<input type="number" name="image_max_dimension" value="' . esc_attr(get_option('image_max_dimension', 2480)) . '" class="small-text" min="500" step="10">';
-        echo '<p class="description">Maximum dimension for uploaded images (longest side).</p>';
-    }, 'brighter_support_page', 'manual_links_section');
-
-    add_settings_field('enable_extra_image_sizes', 'Enable Additional Image Sizes?', function() {
-        $checked = checked(1, get_option('enable_extra_image_sizes'), false);
-        echo "<input type='checkbox' name='enable_extra_image_sizes' value='1' $checked />";
-        echo '<label> Enable medium_large, 1536, and 2048 sizes (e.g. for retina/hero)</label>';
-        echo '<p class="description">leave unchecked to create 150x150 thumbnail, 300x and 1024x thumbnails plus original image.</p>';
-    }, 'brighter_support_page', 'manual_links_section');
-
+    
+    
     
 
-   
-
-
-
+    
     add_settings_field('theme_colour', 'Theme Colour (Hex Code)', function() {
         echo '<input type="text" name="theme_colour" value="' . esc_attr(get_option('theme_colour')) . '" class="regular-text" placeholder="#193b2d">';
     }, 'brighter_support_page', 'manual_links_section');
@@ -250,5 +318,72 @@ add_action('admin_init', function() {
     echo '<input type="url" name="brighter_login_logo" value="' . esc_url(get_option('brighter_login_logo')) . '" class="regular-text">';
     echo '<p class="description">Paste the URL of the image you want to show on the login page.</p>';
 }, 'brighter_support_page', 'manual_links_section');
-});
 
+
+// IMAGE TAB SETTINGS
+
+
+
+register_setting('brighter_optimisation_settings', 'enable_image_resize');
+register_setting('brighter_optimisation_settings', 'image_max_dimension');
+
+$image_sizes = [
+    'thumbnail'     => 'Thumbnail (150x150)',
+    'medium'        => 'Medium (300x0)',       // Uncropped small preview
+    'medium_large'  => 'Medium Large (768w)',  // Tablet width
+    'large'         => 'Large (1200x0)',       // Desktop width
+    '1536x1536'     => 'Retina (1536x0)',      // Retina
+    '2048x2048'     => 'Hero/Full HD (2048x0)',// Hero images
+];
+
+foreach ($image_sizes as $size => $label) {
+    register_setting('brighter_optimisation_settings', "enable_size_$size");
+}
+
+// Section: Image Settings
+add_settings_section('image_optimisation_section', '🖼 Image Settings', '__return_false', 'brighter_optimisation_page');
+
+add_settings_field('enable_image_resize', 'Enable Image Resizing?', function () {
+    $enabled = get_option('enable_image_resize', 'yes');
+    echo '<label><input type="checkbox" name="enable_image_resize" value="yes" ' . checked('yes', $enabled, false) . '> Resize uploaded images</label>';
+    echo '<p class="description">If unchecked, original images will be stored without resizing.</p>';
+}, 'brighter_optimisation_page', 'image_optimisation_section');
+
+add_settings_field('image_max_dimension', 'Max Upload Dimension (px)', function () {
+    echo '<input type="number" name="image_max_dimension" value="' . esc_attr(get_option('image_max_dimension', 2480)) . '" class="small-text" min="500" step="10">';
+    echo '<p class="description">Maximum dimension for uploaded images (longest side).</p>';
+}, 'brighter_optimisation_page', 'image_optimisation_section');
+
+foreach ($image_sizes as $size => $label) {
+    add_settings_field("enable_size_$size", "Enable $label", function () use ($size) {
+        $enabled = get_option("enable_size_$size", 1);
+        echo '<input type="checkbox" name="enable_size_' . $size . '" value="1" ' . checked(1, $enabled, false) . '> ' . ucfirst($size);
+    }, 'brighter_optimisation_page', 'image_optimisation_section');
+}
+
+// Section: Show Registered Sizes
+add_settings_section('registered_sizes_section', ' Registered Image Sizes', function () {
+    $sizes = wp_get_registered_image_subsizes();
+    echo '<ul>';
+    foreach ($sizes as $name => $size) {
+        echo "<li><strong>$name</strong> — {$size['width']}x{$size['height']} " . ($size['crop'] ? '(cropped)' : '') . "</li>";
+    }
+    echo '</ul>';
+}, 'brighter_optimisation_page');
+
+// Regenerate Missing Sizes Button
+add_settings_section('regenerate_images_section', '♻️ Regenerate Images', function () {
+    $nonce = wp_create_nonce('brighter_regenerate_images');
+    echo '<p>Click the button below to regenerate missing image sizes (1200, 1536, 2048, etc.) for all media files.</p>';
+    echo '<a href="' . admin_url('admin-post.php?action=brighter_regenerate_images&_wpnonce=' . $nonce) . '" class="button button-primary">Regenerate Missing Sizes</a>';
+}, 'brighter_optimisation_page');
+
+if (isset($_GET['regen']) && $_GET['regen'] === 'done') {
+    echo '<div class="notice notice-success is-dismissible"><p>All image sizes have been regenerated successfully!</p></div>';
+}
+
+// Placeholder for future optimisations
+add_settings_section('other_optimisation_section', '⚙ Other Optimisations', function () {
+    echo '<p>More performance tools coming soon...</p>';
+}, 'brighter_optimisation_page');
+});
