@@ -1,5 +1,16 @@
 <?php 
 
+
+//adds custom skip to main content link for screen reasers  accessibiity optimisation. CSS is styled in Breakdance Global Styles
+
+//minimal impact if you disable this. 
+function add_skip_link() {
+    echo '<div class="theskip"><a href="#main-content" class="skip-link">Skip to main content</a></div>';
+}
+add_action('wp_body_open', 'add_skip_link');
+
+
+
 add_action('wp_head', function() {
     if (is_page('privacy-policy')) { // Can also use page ID
         ?>
