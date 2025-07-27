@@ -1,13 +1,14 @@
 <?php
 // Brighter Core MU Plugin Loader
 
+
 // Define plugin constants
 define('BRIGHTER_CORE_VERSION', '1.0.0');
 define('BRIGHTER_CORE_PATH', plugin_dir_path(__FILE__));
 
 // Module toggles – set to true/false to enable/disable
 $brighter_modules = [
-    'activity-log'    => true,
+    
     'business-info'   => true,
     'custom-admin'    => true,
     'brighter-support'=> true,
