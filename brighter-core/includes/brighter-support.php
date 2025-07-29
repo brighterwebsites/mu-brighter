@@ -164,6 +164,9 @@ add_action('after_setup_theme', function() {
     }
 });
 
+if (isset($_GET['regen']) && $_GET['regen'] === 'done') {
+    echo '<div class="notice notice-success is-dismissible"><p>All image sizes have been regenerated successfully!</p></div>';
+}
 
 
 // Disable comments on media attachments
