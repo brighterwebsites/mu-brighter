@@ -324,66 +324,62 @@ add_action('admin_init', function() {
 
 
 
-register_setting('brighter_optimisation_settings', 'enable_image_resize');
-register_setting('brighter_optimisation_settings', 'image_max_dimension');
+    register_setting('brighter_optimisation_settings', 'enable_image_resize');
+    register_setting('brighter_optimisation_settings', 'image_max_dimension');
 
-$image_sizes = [
-    'thumbnail'     => 'Thumbnail (150x150)',
-    'medium'        => 'Medium (300x0)',       // Uncropped small preview
-    'medium_large'  => 'Medium Large (768w)',  // Tablet width
-    'large'         => 'Large (1200x0)',       // Desktop width
-    '1536x1536'     => 'Retina (1536x0)',      // Retina
-    '2048x2048'     => 'Hero/Full HD (2048x0)',// Hero images
-];
+    $image_sizes = [
+        'thumbnail'      => 'Thumbnail (150x150)',
+        'medium'         => 'Medium (300x300)',
+        'custom_768w'    => 'Medium Large (768w)', // ✅ use custom size here
+        'custom_1200w'    => 'Large (1200w)',
+        '1536x1536'      => '1536x1536',
+        '2048x2048'      => '2048x2048',
+    ];
 
-foreach ($image_sizes as $size => $label) {
-    register_setting('brighter_optimisation_settings', "enable_size_$size");
-}
+    foreach ($image_sizes as $size => $label) {
+        register_setting('brighter_optimisation_settings', "enable_size_$size");
+    }
 
-// Section: Image Settings
-add_settings_section('image_optimisation_section', '🖼 Image Settings', '__return_false', 'brighter_optimisation_page');
+    // Section: Image Settings
+    add_settings_section('image_optimisation_section', '🖼️ Image Settings', '__return_false', 'brighter_optimisation_page');
 
-add_settings_field('enable_image_resize', 'Enable Image Resizing?', function () {
-    $enabled = get_option('enable_image_resize', 'yes');
-    echo '<label><input type="checkbox" name="enable_image_resize" value="yes" ' . checked('yes', $enabled, false) . '> Resize uploaded images</label>';
-    echo '<p class="description">If unchecked, original images will be stored without resizing.</p>';
-}, 'brighter_optimisation_page', 'image_optimisation_section');
-
-add_settings_field('image_max_dimension', 'Max Upload Dimension (px)', function () {
-    echo '<input type="number" name="image_max_dimension" value="' . esc_attr(get_option('image_max_dimension', 2480)) . '" class="small-text" min="500" step="10">';
-    echo '<p class="description">Maximum dimension for uploaded images (longest side).</p>';
-}, 'brighter_optimisation_page', 'image_optimisation_section');
-
-foreach ($image_sizes as $size => $label) {
-    add_settings_field("enable_size_$size", "Enable $label", function () use ($size) {
-        $enabled = get_option("enable_size_$size", 1);
-        echo '<input type="checkbox" name="enable_size_' . $size . '" value="1" ' . checked(1, $enabled, false) . '> ' . ucfirst($size);
+    add_settings_field('enable_image_resize', 'Enable Image Resizing?', function () {
+        $enabled = get_option('enable_image_resize', 'yes');
+        echo '<label><input type="checkbox" name="enable_image_resize" value="yes" ' . checked('yes', $enabled, false) . '> Resize uploaded images</label>';
+        echo '<p class="description">If unchecked, original images will be stored without resizing.</p>';
     }, 'brighter_optimisation_page', 'image_optimisation_section');
-}
 
-// Section: Show Registered Sizes
-add_settings_section('registered_sizes_section', ' Registered Image Sizes', function () {
-    $sizes = wp_get_registered_image_subsizes();
+    add_settings_field('image_max_dimension', 'Max Upload Dimension (px)', function () {
+        echo '<input type="number" name="image_max_dimension" value="' . esc_attr(get_option('image_max_dimension', 2480)) . '" class="small-text" min="500" step="10">';
+        echo '<p class="description">Maximum dimension for uploaded images (longest side).</p>';
+    }, 'brighter_optimisation_page', 'image_optimisation_section');
+
+    foreach ($image_sizes as $size => $label) {
+        add_settings_field("enable_size_$size", "Enable $label", function () use ($size) {
+            $enabled = get_option("enable_size_$size", 1);
+            echo '<input type="checkbox" name="enable_size_' . $size . '" value="1" ' . checked(1, $enabled, false) . '> ' . ucfirst($size);
+        }, 'brighter_optimisation_page', 'image_optimisation_section');
+    }
+
+    // Section: Show Registered Sizes
+// Section: Show Only Enabled Registered Sizes
+add_settings_section('registered_sizes_section', '📏 Registered Image Sizes', function () {
+    $all_sizes = wp_get_registered_image_subsizes();
     echo '<ul>';
-    foreach ($sizes as $name => $size) {
-        echo "<li><strong>$name</strong> — {$size['width']}x{$size['height']} " . ($size['crop'] ? '(cropped)' : '') . "</li>";
+    foreach ($all_sizes as $name => $size) {
+        $enabled = get_option("enable_size_$name", false);
+        if ($enabled) {
+            $width = esc_html($size['width']);
+            $height = esc_html($size['height']);
+            $crop = $size['crop'] ? ' (cropped)' : '';
+            echo "<li><strong>$name</strong> — {$width}x{$height}{$crop}</li>";
+        }
     }
     echo '</ul>';
 }, 'brighter_optimisation_page');
 
-// Regenerate Missing Sizes Button
-add_settings_section('regenerate_images_section', '♻️ Regenerate Images', function () {
-    $nonce = wp_create_nonce('brighter_regenerate_images');
-    echo '<p>Click the button below to regenerate missing image sizes (1200, 1536, 2048, etc.) for all media files.</p>';
-    echo '<a href="' . admin_url('admin-post.php?action=brighter_regenerate_images&_wpnonce=' . $nonce) . '" class="button button-primary">Regenerate Missing Sizes</a>';
-}, 'brighter_optimisation_page');
-
-if (isset($_GET['regen']) && $_GET['regen'] === 'done') {
-    echo '<div class="notice notice-success is-dismissible"><p>All image sizes have been regenerated successfully!</p></div>';
-}
-
-// Placeholder for future optimisations
-add_settings_section('other_optimisation_section', '⚙ Other Optimisations', function () {
-    echo '<p>More performance tools coming soon...</p>';
-}, 'brighter_optimisation_page');
+    // Placeholder for future optimisations
+    add_settings_section('other_optimisation_section', '️ Other Optimisations', function () {
+        echo '<p>More performance tools coming soon...</p>';
+    }, 'brighter_optimisation_page');
 });
