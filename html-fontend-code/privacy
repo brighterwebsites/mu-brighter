@@ -1,0 +1,316 @@
+<?php
+  // Declare Variables
+$email = get_option('email');
+$contact_name = get_option('contact_name');
+
+?>
+
+<?php 
+  // Table of contents
+  ?>
+
+<ul class="terms-tocs">
+  <li><a href="#s01">
+     1. We respect your privacy</a></li>
+  <li><a href="#s02">
+      2. What personal information is collected </a></li>
+  <li><a href="#s03">
+      3. How we collect your personal information</a></li>
+  <li><a href="#s04">
+      4. How we use your personal information</a></li>
+  <li><a href="#s05">
+      5. Disclosure of your personal information</a></li>
+  <li><a href="#s06">
+      6. General Data Protection Regulation (GDPR) for the European Union (EU)</a></li>
+  <li><a href="#s07">
+      7. Your rights under the GDPR</a></li>
+  <li><a href="#s08">
+      8. Hosting and International Data Transfers</a></li>
+  <li><a href="#s09">
+      9. Security of your personal information</a></li>
+  <li><a href="#s10">
+      10. Access to your personal information</a></li>
+  <li><a href="#s11">
+      11. Complaints about privacy</a></li>
+  <li><a href="#s12">
+      12. Changes to Privacy Policy</a></li>
+  <li><a href="#s13">
+      13. Website</a></li>
+</ul>
+
+
+
+<section class="terms-text">
+  <p>This Website ("the website") is owned and operated by <?php bloginfo('name'); ?>. In this Privacy Policy, "we", "us", and "our" refer to <?php bloginfo('name'); ?>.</p>
+
+  </ul> 
+ </section> <section class="terms-text"><h2 id="s01">1. We respect your privacy</h2> 
+
+  <ul>
+    <li><?php bloginfo('name'); ?> respects your right to privacy and is committed to safeguarding it. This policy outlines how we collect and treat your personal information.</li>
+    <li>We adhere to Australian Privacy Principles and, where applicable, the EU GDPR.</li>
+    <li>"Personal information" refers to data that can identify an individual directly or indirectly.</li>
+    <li>You may contact us at <a href="mailto:<?php echo esc_attr($email); ?>"><?php echo esc_html($email); ?></a> for more information.</li>
+  </ul>
+</section><section class="terms-text"><h2 class="c00" id="s02">2. What personal information is collected</h2> 
+ <ul> 
+    <ul> 
+  <li class="c01">
+        a. Via the <?php bloginfo('name');  ?>  will, from time to time, receive and store personal information you submit to our website, provided to us directly or given to us in other forms.
+    </li>
+    <li class="c01">
+        b. You may provide basic information such as your name, phone number, address and email address to enable us to send you information, provide updates and process your product or service order.
+    </li>
+    <li class="c01">
+        c. We may collect additional information at other times, including but not limited to, when you provide feedback, when you provide information about your personal or business affairs, change your content or email preference, respond to surveys and/or promotions, provide financial or credit card information, or communicate with our customer support.
+    </li>
+    <li class="c01">
+        d. Additionally, we may also collect any other information you provide while interacting with us.
+    </li>
+           </ul>
+
+    </section><section class="terms-text"><h2 class="c00" id="s03">3. How we collect your personal information</h2> 
+ <ul> 
+    <li class="c01">
+<?php bloginfo('name');  ?> and The <?php bloginfo('name');  ?> website may collect personal information from you in a variety of ways, including when you interact with us electronically or in person, when you access our website and when we engage in business activities with you. We may receive personal information from third parties. If we do, we will protect it as set out in this Privacy Policy.
+    </li>
+    <li class="c01">
+        b. By providing us with personal information, you consent to the supply of that information subject to the terms of this Privacy Policy.
+    </li>
+  
+    </ul> 
+ </section> <section class="terms-text"><h2 class="c00" id=s04>
+      4. How we use your personal information</h2> 
+ <ul> 
+  
+  <li class="c01">
+    a. <?php bloginfo('name');  ?> may use personal information collected from you to provide you with information about our products or services. We may also make you aware of new and additional products, services and opportunities available to you.
+  </li>
+  <li class="c01">
+    b. <?php bloginfo('name');  ?> will use personal information only for the purposes that you consent to. This may include to:
+  </li>
+  <li class="c02"> i. provide you with products and services during the usual course of our business activities;
+  </li>
+  <li class="c02"> ii. administer our business activities;
+  </li>
+  <li class="c02">iii. manage, research and develop our products and services;
+  </li>
+  <li class="c02">iv. provide you with information about our products and services;
+  </li>
+  <li class="c02"> v. communicate with you by a variety of measures including, but not limited to, by telephone, email, sms or mail; and
+  </li>
+  <li class="c02">vi. investigate any complaints.
+  </li>
+  <li class="c01">
+    c. If you withhold your personal information, it may not be possible for us to provide you with our products and services or for you to fully access our website.
+  </li>
+  <li class="c01">
+    d. We may disclose your personal information to comply with a legal requirement, such as a law, regulation, court order, subpoena, warrant, legal proceedings or in response to a law enforcement agency request.
+  </li>
+  <li class="c01">
+    e. If there is a change of control in our business or a sale or transfer of business assets, we reserve the right to transfer to the extent permissible at law our user databases, together with any personal information and non-personal information contained in those databases.
+  </li>
+ 
+    </ul> 
+ </section> <section class="terms-text"><h2 class="c00" id=s05>
+      5. Disclosure of your personal information</h2> 
+ <ul> 
+  
+  <li class="c01">
+    a. <?php bloginfo('name');  ?> may disclose your personal information to employees, officers, insurers, professional advisers, agents, suppliers or subcontractors insofar as reasonably necessary for the purposes set out in this privacy policy.
+  </li>
+  <li class="c01">
+    b. If we or the do disclose your personal information to a third party we will protect it in accordance with this privacy policy.
+  </li>
+ 
+  
+    </ul> 
+ </section> <section class="terms-text"><h2 class="c00" id=s06>
+      6. General Data Protection Regulation (GDPR) for the European Union (EU)</h2> 
+ <ul> 
+  
+  <li class="c01">
+    a. <?php bloginfo('name');  ?> will comply with the principles of data protection set out in the GDPR for the purpose of fairness, transparency and lawful data collection and use.
+  </li>
+  <li class="c01">
+    b. We process your personal information as a Processor and/or to the extent that we are a Controller as defined in the GDPR.
+  </li>
+  <li class="c01">
+    c. We must establish a lawful basis for processing your personal information. The legal basis for which we collect your personal information depends on the data that we collect and how we use it.
+  </li>
+  <li class="c01">
+    d. We will only collect your personal information with your express consent for a specific purpose and any data collected will be to the extent necessary and not excessive for its purpose. We will keep your data safe and secure.
+  </li>
+  <li class="c01">
+    e. We will also process your personal information if it is necessary for our legitimate interests, or to fulfil a contractual or legal obligation.
+  </li>
+  <li class="c01">
+    f. We process your personal information if it is necessary to protect your life or in a medical situation, it is necessary to carry out a public function, a task of public interest or if the function has a clear basis in law.
+  </li>
+  <li class="c01">
+    g. We do not collect or process any personal information from you that is considered "Sensitive Personal Information" under the GDPR, such as personal information relating to your sexual orientation or ethnic origin unless we have obtained your explicit consent, or if it is being collected subject to and in accordance with the GDPR.
+  </li>
+  <li class="c01">
+    h. You must not provide us with your personal information if you are under the age of 16 without the consent of your parent or someone who has parental authority for you. We do not knowingly collect or process the personal information of children.
+  </li>
+  
+    </ul> 
+ </section> <section class="terms-text"><h2 class="c00" id=s07>
+      7. Your rights under the GDPR</h2> 
+ <ul> 
+  
+  <li class="c01">
+    a. If you are an individual residing in the EU, you have certain rights as to how your personal information is obtained and used. <?php bloginfo('name');  ?> complies with your rights under the GDPR as to how your personal information is used and controlled if you are an individual residing in the EU
+  </li>
+  <li class="c01">
+    b. Except as otherwise provided in the GDPR, you have the following rights:
+  </li>
+  <li class="c02">
+    i. to be informed how your personal information is being used;
+
+  </li>
+  <li class="c02"> ii. access your personal information (we will provide you with a free copy of it);
+
+  </li>
+  <li class="c02"> iii. to correct your personal information if it is inaccurate or incomplete;
+
+  </li>
+  <li class="c02"> iv. to delete your personal information (also known as "the right to be forgotten");
+
+  </li>
+  <li class="c02"> v. to restrict processing of your personal information;
+
+  </li>
+  <li class="c02"> vi. to retain and reuse your personal information for your own purposes;
+
+  </li>
+  <li class="c02">vii. to object to your personal information being used; and
+
+  </li>
+  <li class="c02">viii. to object against automated decision making and profiling.
+  </li>
+  <li class="c01">
+    c. Please contact us at any time to exercise your rights under the GDPR at the contact details in this Privacy Policy.
+  </li>
+  <li class="c01">
+    d. We may ask you to verify your identity before acting on any of your requests.
+  </li>
+  
+   </ul> 
+ </section> <section class="terms-text"><h2 class="c00" id=s08>
+      8. Hosting and International Data Transfers</h2> 
+ <ul> 
+
+  <li class="c01">
+    a. Information that we collect may from time to time be stored, processed in or transferred between parties or sites located in countries outside of Australia. These may include, but are not limited to EU, US, Australia, Asia.
+  </li>
+  <li class="c01">
+    b. We and our other group companies have offices and/or facilities in EU, US, Australia, Asia. Transfers to each of these countries will be protected by appropriate safeguards, these include one or more of the following: the use of standard data protection clauses adopted or approved by the European Commission which you can obtain from the European Commission Website; the use of binding corporate rules, a copy of which you can obtain from <?php bloginfo('name');  ?>'s Data Protection Officer.
+  </li>
+  <li class="c01">
+    c. The hosting facilities for our website are situated in EU, US, Australia, Asia. Transfers to each of these Countries will be protected by appropriate safeguards, these include one or more of the following: the use of standard data protection clauses adopted or approved by the European Commission which you can obtain from the European Commission Website; the use of binding corporate rules, a copy of which you can obtain from <?php bloginfo('name');  ?>'s Data Protection Officer.
+  </li>
+  <li class="c01">
+    d. Our Suppliers and Contractors are situated in EU, US, Australia, Asia. Transfers to each of these Countries will be protected by appropriate safeguards, these include one or more of the following: the use of standard data protection clauses adopted or approved by the European Commission which you can obtain from the European Commission Website; the use of binding corporate rules, a copy of which you can obtain from <?php bloginfo('name');  ?>'s Data Protection Officer.
+  </li>
+  <li class="c01">
+    e. You acknowledge that personal data that you submit for publication through our website or services may be available, via the internet, around the world. We cannot prevent the use (or misuse) of such personal data by others.
+  </li>
+    </ul> 
+ </section> <section class="terms-text"><h2 class="c00" id=s09>
+      9. Security of your personal information</h2> 
+ <ul> 
+  
+  <li class="c01">
+    a. <?php bloginfo('name');  ?> is committed to ensuring that the information you provide to us is secure. In order to prevent unauthorised access or disclosure, we have put in place suitable physical, electronic and managerial procedures to safeguard and secure information and protect it from misuse, interference, loss and unauthorised access, modification and disclosure.
+  </li>
+  <li class="c01">
+    b. Where we employ data processors to process personal information on our behalf, we only do so on the basis that such data processors comply with the requirements under the GDPR and that have adequate technical measures in place to protect personal information against unauthorised use, loss and theft.
+  </li>
+  <li class="c01">
+    c. The transmission and exchange of information is carried out at your own risk. We cannot guarantee the security of any information that you transmit to us, or receive from us. Although we take measures to safeguard against unauthorised disclosures of information, we cannot assure you that personal information that we collect will not be disclosed in a manner that is inconsistent with this Privacy Policy.
+  </li>
+ <li class="c01"> 
+  d. If you have questions regarding our data processing practices, or if you wish to execute a Data Processing Agreement (DPA), please contact our Data Protection Officer (DPO),<?php echo esc_attr($contact_name); ?>  at <a href="mailto:<?php echo esc_attr($email); ?>"><?php echo esc_html($email); ?></a>
+. We align our practices with the terms provided by third-party analytics providers such as [Google Analytics/AHrefs/MS Clarity/Hubspot/etc.], and ensure compliance with their DPA obligations.
+</li>
+ 
+    </ul> 
+ </section> <section class="terms-text"><h2 class="c00" id=s10>
+      10. Access to your personal information</h2> 
+ <ul> 
+  
+  <li class="c01">
+    a. You may request details of personal information that we hold about you in accordance with the provisions of the Privacy Act 1988 (Cth), and to the extent applicable the EU GDPR. If you would like a copy of the information which we hold about you or believe that any information we hold on you is inaccurate, out of date, incomplete, irrelevant or misleading, please email us at <?php $email = get_option('email'); if ($email) { echo '<a href="mailto:' . esc_attr($email) . '">' . esc_html($email) . '</a>'; } ?>
+  </li>
+  <li class="c01">
+    b. We reserve the right to refuse to provide you with information that we hold about you, in certain circumstances set out in the Privacy Act or any other applicable law.
+  </li>
+ 
+    </ul> 
+ </section> <section class="terms-text"><h2 class="c00" id=s11>
+      11. Complaints about privacy</h2> 
+ <ul> 
+  <li class="c01">
+    a. If you have any complaints about our privacy practices, please feel free to send in details of your complaints to <?php $email = get_option('email'); if ($email) { echo '<a href="mailto:' . esc_attr($email) . '">' . esc_html($email) . '</a>'; } ?>. We take complaints very seriously and will respond shortly after receiving written notice of your complaint.
+  </li>
+    </ul> 
+ </section> <section class="terms-text"><h2 class="c00" id=s12>
+      12. Changes to Privacy Policy</h2> 
+ <ul> 
+  <li class="c01">
+    a. Please be aware that we may change this Privacy Policy in the future. We may modify this Policy at any time, in our sole discretion and all modifications will be effective immediately upon our posting of the modifications on our website or notice board. Please check back from time to time to review our Privacy Policy.
+  </li>
+    </ul> 
+ </section> <section class="terms-text"><h2 class="c00" id=s13>
+      13. Website</h2> 
+ <ul> 
+  <li class="c01" id=s14>
+    <h3>a. When you visit our website</h3>  </li>
+    <li class="c01">When you come to our website (<?php echo '<a href="' . esc_url($home_url) . '">' . esc_html($home_url) . '</a>'; ?>), we may collect certain information such as browser type, operating system, website visited immediately before coming to our site, etc. This information is used in an aggregated manner to analyse how people use our site, such that we can improve our service.
+  </li>
+   <li class="c01" id=s15>
+    <h3> b. Third party sites</h3>  </li>
+    <li class="c01">Our site may from time to time have links to other websites not owned or controlled by us. These links are meant for your convenience only. Links to third party websites do not constitute sponsorship or endorsement or approval of these websites. Please be aware that <?php bloginfo('name');  ?> is not responsible for the privacy practices of other such websites. We encourage our users to be aware, when they leave our website, to read the privacy statements of each and every website that collects personal identifiable information
+  </li>
+  <li class="c01" id="analytics-tools">
+  <h3>c. Third-Party Analytics and Marketing Tools</h3>
+</li>
+<li class="c01">
+  We use the following third-party services to analyze usage, improve performance, and support marketing efforts on our website. These services may collect data such as your IP address, device type, browser, pages visited, and interactions:
+  <ul>
+    <li><strong>Google Analytics</strong>: Tracks site traffic and user behavior. <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">View Privacy Policy</a></li>
+    <li><strong>Ahrefs</strong>: Assesses SEO and backlink performance. <a href="https://ahrefs.com/privacy-policy" target="_blank" rel="noopener noreferrer">View Privacy Policy</a></li>
+    <li><strong>Microsoft Clarity</strong>: Records sessions and generates heatmaps. <a href="https://privacy.microsoft.com/en-us/privacystatement" target="_blank" rel="noopener noreferrer">View Privacy Statement</a></li>
+    <li><strong>HubSpot</strong>: Powers CRM and marketing automation. <a href="https://legal.hubspot.com/privacy-policy" target="_blank" rel="noopener noreferrer">View Privacy Policy</a></li>
+  </ul>
+  You may manage or restrict cookie use via your browser settings or opt out of Google Analytics tracking through the <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer">Google Analytics Opt-out Browser Add-on</a>.
+</li>
+
+   <li class="c01" id="cookie">
+    <h3>c. Our Cookie Policy</h3>
+  </li>
+  <li class="c01">Our Cookie Policy explains what cookies are, how we use cookies, how third-party partners may use cookies on our Websites and your choices regarding cookies.
+  </li>
+  <li class="c01">
+    General information about visits to our Websites is cs on our Websites are visited, in what order and how often and the previous website visited and also to process the items you select if you are making purchases from our Websites. The anonymous non-personal information that we collect and analyse is not personal information as described in the Privacy Act.
+</p>
+</li>
+
+<h4 class="c02" id=s16-1"> 1. Why do we use “cookies” and other web use tracking technologies?</h4>
+
+<li class="c02">
+  1.1. When you access our Website, small files containing a unique identification (ID) number may be downloaded by your web browser and stored in the cache of your computer. The purpose of sending these files with a unique ID number is so that our Website can recognise your computer when you next visit our Website. The “cookies” that are shared with your computer can’t be used to discover any personal information such as your name, address or email address; they merely identify your computer to our Websites when you visit us.</li>
+<li class="c02">1.2. We can also log the internet protocol address (IP address) of visitors to our Website so that we can work out the countries in which the computers are located.</li>
+<li class="c02">1.3. We collect information using “cookies” and other tracking technologies for the following reasons:</li>
+<li class="c03">1.3.1. to help us monitor the performance of our Website so that we can improve the operation of the Website and the services we offer;</li>
+<li class="c03">1.3.2. to provide personalised services to each user of our Website to make their navigation through our Website easier and more rewarding to the user;</li>
+<li class="c03">1.3.3. to sell advertising on the Website in order to meet some of the costs of operating the Website and improve the content on the Website; and</li>
+<li class="c03">1.3.4. when we have permission from the user, to market the services we provide by sending emails that are personalised to what we understand are the interests of the user.</li>
+<li class="c02">1.4. Even if you have given us permission to send you emails, you can, at any time, decide not to receive further emails and will be able to “unsubscribe” from that service.</li>
+<li class="c02">1.5. In addition to our own cookies, we may also use various third-parties cookies to report usage statistics of the Website, deliver advertisements on and through the Website, and so on.</li>
+
+  <h4 class="c02" id=s16-2"> 2. What are your choices regarding cookies?</h4>
+<li class="c02">2.1. If you are unhappy about having a cookie sent to you, you can set your browser to refuse cookies or choose to have your computer warn you each time a cookie is being sent. However, if you turn your cookies off, some of our services may not function properly.</li>
+
+
