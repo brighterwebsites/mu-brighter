@@ -120,3 +120,30 @@ add_action('admin_post_brighter_regenerate_images', function () {
     wp_redirect(admin_url('options-general.php?page=brighter_optimisation_page&regen=done'));
     exit;
 });
+
+add_action('admin_post_brighter_regenerate_images', function () {
+    if (!current_user_can('manage_options') || !isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'brighter_regenerate_images')) {
+        wp_die('Access denied');
+    }
+
+    $attachments = get_posts([
+        'post_type'      => 'attachment',
+        'post_mime_type' => 'image',
+        'posts_per_page' => -1,
+        'fields'         => 'ids',
+    ]);
+
+    foreach ($attachments as $attachment_id) {
+        $file = get_attached_file($attachment_id);
+        if ($file && file_exists($file)) {
+            wp_update_attachment_metadata(
+                $attachment_id,
+                wp_generate_attachment_metadata($attachment_id, $file)
+            );
+        }
+    }
+
+    wp_redirect(admin_url('options-general.php?page=brighter_support&tab=optimisation&regen=done'));
+    exit;
+});
+
