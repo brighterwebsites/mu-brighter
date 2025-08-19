@@ -249,10 +249,10 @@ echo '</div>';
        echo '<p><strong>📣 Recommended Tools</strong> – If these tools have been set up for you, you’ll find the login details in your <strong>Website Owner Manual</strong>.</p>';
 
         echo '<ul>';
-        echo '<li><strong>Email Campaigns:</strong> <a href="http://dashboard.mailerlite.com" target="_blank">MailerLite Dashboard</a></li>';
+        echo '<li><strong>Email Campaigns:</strong> <a href="https://www.mailerlite.com/invite/e74a69700df56/" target="_blank">MailerLite</a></li>';
         echo '<li><strong>SMS Marketing:</strong> <a href="https://www.smsglobal.com/" target="_blank">SMSGlobal</a></li>';
         echo '<li><strong>Social Media Management:</strong> <a href="https://www.postly.ai/" target="_blank">Postly</a></li>';
-        echo '<li><strong>Content copywriter:</strong> <a href="https://neuronwriter.com/" target="_blank">Neuronwriter</a></li>';
+        echo '<li><strong>Content copywriter:</strong> <a href="https://app.neuronwriter.com/ar/98d2833da3de4ac1cc524b8864cf1241/" target="_blank">Neuronwriter</a></li>';
 
         echo '</ul>';
     echo '</div>';

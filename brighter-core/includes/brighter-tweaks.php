@@ -32,16 +32,8 @@ class Brighter_Tweaks {
 
   /** Add a “Brighter Tweaks” tab/section to your existing page */
   public static function hook_tab_into_support() {
-    // If you already render tabs via your own router, just call self::render_page() when tab = tweaks.
-    // Otherwise add a submenu under your existing page:
-    add_submenu_page(
-      'brighter_support_page',
-      'Brighter Tweaks',
-      'Brighter Tweaks',
-      'manage_options',
-      'brighter_tweaks',
-      [__CLASS__, 'render_page']
-    );
+     // No submenu creation needed; Tweaks will be rendered as a tab via brighter_support_render_page().
+
   }
 
 
