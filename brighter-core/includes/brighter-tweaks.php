@@ -4,6 +4,7 @@ defined('ABSPATH') || exit;
 class Brighter_Tweaks {
   const OPT = 'bw_preloads_map';     // array: [ page_id => [urls...] ]
   const OPT_THEME = 'theme_colour';  // hex code
+  
 
   public static function boot() {
     // Admin UI
@@ -42,6 +43,10 @@ class Brighter_Tweaks {
       [__CLASS__, 'render_page']
     );
   }
+
+
+
+
 
   /** Admin page render */
   public static function render_page() {
@@ -248,3 +253,95 @@ class Brighter_Tweaks {
 }
 
 Brighter_Tweaks::boot();
+
+
+// Register page meta
+add_action('init', function () {
+  register_post_meta('page', '_bw_preloads', [
+    'type'              => 'array',
+    'single'            => true,
+    'show_in_rest'      => true,
+    'sanitize_callback' => function ($val) {
+      $out = [];
+      if (is_string($val)) $val = preg_split('/\r\n|\r|\n/', $val);
+      if (!is_array($val)) return [];
+      foreach ($val as $u) {
+        $u = trim((string)$u);
+        if ($u === '') continue;
+        if (strpos($u, '//') === 0) $u = 'https:' . $u;          // allow protocol-relative
+        if ($u[0] === '/') { $out[] = esc_url_raw($u); continue; } // site-relative
+        if (filter_var($u, FILTER_VALIDATE_URL)) $out[] = esc_url_raw($u);
+      }
+      return array_values(array_unique($out));
+    },
+    'auth_callback'     => function () { return current_user_can('edit_pages'); },
+    'default'           => [],
+  ]);
+});
+
+// Add meta box
+add_action('add_meta_boxes', function () {
+  add_meta_box('bw_preloads', 'Preload Assets', function ($post) {
+    $vals = get_post_meta($post->ID, '_bw_preloads', true);
+    $text = is_array($vals) ? implode("\n", $vals) : '';
+    echo '<p>Enter one asset URL per line. Supports CSS, JS, fonts, and images.</p>';
+    echo '<textarea style="width:100%;min-height:140px" name="bw_preloads_field">' . esc_textarea($text) . '</textarea>';
+    wp_nonce_field('bw_preloads_save', 'bw_preloads_nonce');
+  }, 'page', 'side', 'default');
+});
+
+// Save meta box
+add_action('save_post_page', function ($post_id) {
+  if (wp_is_post_revision($post_id)) return;
+  if (!isset($_POST['bw_preloads_nonce']) || !wp_verify_nonce($_POST['bw_preloads_nonce'], 'bw_preloads_save')) return;
+  if (!current_user_can('edit_page', $post_id)) return;
+  $lines = isset($_POST['bw_preloads_field']) ? (string) wp_unslash($_POST['bw_preloads_field']) : '';
+  // Reuse the sanitizer above by writing a string; register_post_meta will run sanitize when updating via update_post_meta?
+  // We’ll sanitize here to be explicit:
+  $arr = array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $lines)));
+  // Minimal URL sanitise
+  $clean = [];
+  foreach ($arr as $u) {
+    if (strpos($u, '//') === 0) $u = 'https:' . $u;
+    if ($u !== '' && ($u[0] === '/' || filter_var($u, FILTER_VALIDATE_URL))) $clean[] = esc_url_raw($u);
+  }
+  update_post_meta($post_id, '_bw_preloads', array_values(array_unique($clean)));
+});
+
+add_action('wp_head', function () {
+  if (!is_page()) return;
+  $assets = get_post_meta(get_queried_object_id(), '_bw_preloads', true);
+  if (empty($assets) || !is_array($assets)) return;
+
+  foreach ($assets as $u) {
+    $attr = bw_infer_preload_attrs($u);
+    if (!$attr) continue;
+    printf(
+      "<link rel=\"preload\" href=\"%s\" as=\"%s\"%s%s>\n",
+      esc_url($u),
+      esc_attr($attr['as']),
+      !empty($attr['type']) ? ' type="'.esc_attr($attr['type']).'"' : '',
+      !empty($attr['crossorigin']) ? ' crossorigin' : ''
+    );
+  }
+}, 1);
+
+// Helper: guess proper as= and type=
+function bw_infer_preload_attrs($url) {
+  $path = parse_url($url, PHP_URL_PATH) ?: '';
+  $ext  = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+  switch ($ext) {
+    case 'css':   return ['as'=>'style','type'=>'text/css'];
+    case 'js':    return ['as'=>'script','type'=>'application/javascript'];
+    case 'woff2': return ['as'=>'font','type'=>'font/woff2','crossorigin'=>true];
+    case 'woff':  return ['as'=>'font','type'=>'font/woff','crossorigin'=>true];
+    case 'ttf':   return ['as'=>'font','type'=>'font/ttf','crossorigin'=>true];
+    case 'otf':   return ['as'=>'font','type'=>'font/otf','crossorigin'=>true];
+    case 'jpg': case 'jpeg': return ['as'=>'image','type'=>'image/jpeg'];
+    case 'png':   return ['as'=>'image','type'=>'image/png'];
+    case 'webp':  return ['as'=>'image','type'=>'image/webp'];
+    case 'gif':   return ['as'=>'image','type'=>'image/gif'];
+    case 'svg':   return ['as'=>'image','type'=>'image/svg+xml'];
+    default:      return ['as'=>'fetch','type'=>''];
+  }
+}

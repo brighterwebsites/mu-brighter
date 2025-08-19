@@ -95,7 +95,8 @@ function brighter_support_render_page() {
     
     echo '<a href="?page=brighter_support&tab=optimisation" class="nav-tab ' . ($active_tab == 'optimisation' ? 'nav-tab-active' : '') . '">Optimisation</a>';
     echo '</nav>';
-    
+    echo '<a href="?page=brighter_support&tab=tweaks" class="nav-tab ' . ($active_tab == 'tweaks' ? 'nav-tab-active' : '') . '">Brighter Tweaks</a>';
+
 
     if ($active_tab === 'manuals' && in_array($email, $admin_emails)) {
      echo '<div class="support-page">';
@@ -119,6 +120,16 @@ function brighter_support_render_page() {
             echo '</form>';
             echo '</div>';
         }
+		/* ADD THIS */
+		} elseif ($active_tab === 'tweaks' && current_user_can('manage_options')) {
+			Brighter_Tweaks::render_page();
+			echo '<div class="support-page">';
+			echo '<form method="post" action="options.php">';
+			settings_fields('brighter_tweaks_settings');
+			do_settings_sections('brighter_tweaks_page');
+			submit_button('Save Tweaks');
+			echo '</form>';
+			echo '</div>';
         
         else {
             brighter_support_output_main();
@@ -138,8 +149,8 @@ function brighter_support_output_main() {
     $manual_quick_link = esc_url(get_option('manual_quick_link', '#'));
     $website_ranking_link = esc_url(get_option('website_ranking_link', '#'));
     $map_ranking_link = esc_url(get_option('map_ranking_link', '#'));
-$logo_url = plugin_dir_url(__FILE__) . '../assets/brighter-logo.png';
-$site_url = get_site_url();
+	$logo_url = plugin_dir_url(__FILE__) . '../assets/brighter-logo.png';
+	$site_url = get_site_url();
 
 
     echo '<div class="support-page">';
@@ -272,16 +283,12 @@ add_action('admin_init', function() {
     register_setting('brighter_support_settings', 'website_ranking_link');
     register_setting('brighter_support_settings', 'map_ranking_link');
     register_setting('brighter_support_settings', 'brighter_login_logo');
-    register_setting('brighter_support_settings', 'theme_colour');
+    
 
     // 📘 Section: Manual & Visual Settings
     add_settings_section('manual_links_section', 'Edit Manual Links', '__return_false', 'brighter_support_page');
 
-    // 🎨 Theme Colour
-    add_settings_field('theme_colour', 'Theme Colour (Hex Code)', function() {
-        echo '<input type="text" name="theme_colour" value="' . esc_attr(get_option('theme_colour')) . '" class="regular-text" placeholder="#193b2d">';
-    }, 'brighter_support_page', 'manual_links_section');
-
+ 
     // 📚 Full Manual URL
     add_settings_field('manual_full_link', 'Full Manual URL', function() {
         echo '<input type="url" name="manual_full_link" value="' . esc_url(get_option('manual_full_link')) . '" class="regular-text">';
