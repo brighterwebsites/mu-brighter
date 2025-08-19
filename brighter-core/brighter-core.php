@@ -3,21 +3,22 @@
 
 
 // Define plugin constants
-define('BRIGHTER_CORE_VERSION', '1.0.0');
+define('BRIGHTER_CORE_VERSION', '2.0.0');
 define('BRIGHTER_CORE_PATH', plugin_dir_path(__FILE__));
 
 // Module toggles – set to true/false to enable/disable
 $brighter_modules = [
-    
-    'business-info'   => true,
-    'custom-admin'    => true,
-    'brighter-support'=> true,
-    'login-styling'=> true,
-    'privacy-policy-style'=> true,
-    'image-optimisation' => true,
-    'php-limits' => true,
-    'helpers'         => true, // Include helpers if needed
-    // 'performance'   => false, // Remove or create the file
+ 	'brighter-support'=> true,
+    	'brighter-support-image-settings'=> true,
+	'brighter-tweaks'=> true,
+	'custom-admin'    => true,
+ 	'custom-wpemail'    => true,
+	'helpers'         => true,  
+	'image-optimisation' => true,
+	'login-styling'=> true,
+	'php-limits' => true,
+	'privacy-policy-style'=> true,
+	'tracking'   => true,
 ];
 
 // Include modules conditionally
@@ -31,3 +32,4 @@ foreach ($brighter_modules as $module => $enabled) {
         }
     }
 }
+
