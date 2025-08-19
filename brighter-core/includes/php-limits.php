@@ -28,3 +28,4 @@ if ( ! ini_get( 'upload_max_filesize' ) || (int) ini_get( 'upload_max_filesize' 
 if ( ! ini_get( 'max_input_vars' ) || (int) ini_get( 'max_input_vars' ) < 3000 ) {
     ini_set( 'max_input_vars', '3000' );
 }
+

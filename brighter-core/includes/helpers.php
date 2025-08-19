@@ -193,4 +193,10 @@ add_filter("breakdance_form_submission_capability",function()
 });
 
 
+//allows Editor roles in WordPress to access the Breakdance form submissions page (edit.php?post_type=breakdance_form_res), 
+
+add_filter("breakdance_form_submission_capability",function() 
+{
+    return "edit_posts";
+});
 
