@@ -1,0 +1,14 @@
+{
+  "brighterwebsites.com.au": {
+    "url": "https://brighterwebsites.com.au",
+    "token": "A0BeFfBlcNn0Tc3DrhRJNY9cNBHGjIrv"
+  },
+  "clientsite1.com": {
+    "url": "https://clientsite1.com",
+    "token": "def456def456def456"
+  },
+  "clientsite2.com": {
+    "url": "https://clientsite2.com",
+    "token": "ghi789ghi789ghi789"
+  }
+}
