@@ -1,7 +1,7 @@
 <?php
 //Preload Images - Individual pages 
 //Preload Images on Single Posts Select Post type
-// Add status custom column to posts & pages
+// Add Fetch Pri high to image input boxes
 
 defined('ABSPATH') || exit;
 
@@ -256,31 +256,44 @@ if ($total_pages > 1){
 }
 
 Brighter_Tweaks::boot();
+add_action( 'init', function () {
 
-
-// Register page meta
-add_action('init', function () {
-  register_post_meta('page', '_bw_preloads', [
-    'type'              => 'array',
-    'single'            => true,
-    'show_in_rest'      => true,
-    'sanitize_callback' => function ($val) {
-      $out = [];
-      if (is_string($val)) $val = preg_split('/\r\n|\r|\n/', $val);
-      if (!is_array($val)) return [];
-      foreach ($val as $u) {
-        $u = trim((string)$u);
-        if ($u === '') continue;
-        if (strpos($u, '//') === 0) $u = 'https:' . $u;          // allow protocol-relative
-        if ($u[0] === '/') { $out[] = esc_url_raw($u); continue; } // site-relative
-        if (filter_var($u, FILTER_VALIDATE_URL)) $out[] = esc_url_raw($u);
+  // very safe sanitizer: strings only, trimmed
+  $sanitize_array_of_strings = function( $value ) {
+    $out = [];
+    foreach ( (array) $value as $v ) {
+      if ( is_scalar( $v ) ) {
+        $s = sanitize_text_field( (string) $v );
+        if ( $s !== '' ) {
+          $out[] = $s;
+        }
       }
-      return array_values(array_unique($out));
-    },
-    'auth_callback'     => function () { return current_user_can('edit_pages'); },
-    'default'           => [],
-  ]);
-});
+    }
+    // unique + reindex
+    return array_values( array_unique( $out ) );
+  };
+
+  register_post_meta(
+    'page',
+    '_bw_preloads',
+    [
+      'type'              => 'array',
+      'single'            => true,
+      'default'           => [],
+      'sanitize_callback' => $sanitize_array_of_strings,
+      'show_in_rest'      => [
+        'schema' => [
+          'type'  => 'array',
+          'items' => [ 'type' => 'string' ],
+        ],
+      ],
+      'auth_callback'     => '__return_true',
+    ]
+  );
+
+}, 10 );
+
+
 
 // Add meta box
 add_action('add_meta_boxes', function () {
@@ -329,6 +342,8 @@ add_action('wp_head', function () {
   }
 }, 1);
 
+
+
 // Helper: guess proper as= and type=
 function bw_infer_preload_attrs($url) {
   $path = parse_url($url, PHP_URL_PATH) ?: '';
@@ -348,6 +363,103 @@ function bw_infer_preload_attrs($url) {
     default:      return ['as'=>'fetch','type'=>''];
   }
 }
+
+
+/**
+ * LCP helpers:
+ * - Keep the textarea as "one URL per line".
+ * - For matching images on that page, force eager + high priority.
+ * - Works for both attachment images and hard-coded <img> in content.
+ */
+
+/** Get the configured URL list for the current singular page */
+function bw_get_preload_urls_for_current_page() {
+    if ( ! is_singular() ) return [];
+    $pid = get_queried_object_id();
+
+    // Adjust this option name if your plugin stores it differently.
+    // Many of your snippets referenced Brighter_Tweaks::OPT, so use that if available.
+    $opt_name = defined('Brighter_Tweaks::OPT') ? Brighter_Tweaks::OPT : 'brighter_preloads_map';
+
+    $map  = (array) get_option($opt_name, []);
+    $list = isset($map[$pid]) ? (array) $map[$pid] : [];
+
+    // The DB may store as newline-separated text. Normalise to array.
+    if (count($list) === 1 && is_string($list[0]) && strpos($list[0], "\n") !== false) {
+        $list = preg_split('/\r\n|\r|\n/', $list[0]);
+    }
+    $list = array_values(array_filter(array_map('trim', $list)));
+    return $list;
+}
+
+/** True if $src matches any configured preload URL exactly or by prefix */
+function bw_src_matches_lcp_list($src, $list) {
+    if ( ! $src || ! $list ) return false;
+    foreach ($list as $u) {
+        // accept exact, prefix, or prefix without query
+        if ($src === $u) return true;
+        if (strpos($src, $u) === 0) return true;
+        $u_base = strtok($u, '?');
+        if ($u_base && strpos($src, $u_base) === 0) return true;
+    }
+    return false;
+}
+
+/**
+ * 1) WordPress attachment images <img> generated via wp_get_attachment_image()
+ * Force eager + fetchpriority=high for matching LCP candidates.
+ */
+add_filter('wp_get_attachment_image_attributes', function ($attr, $attachment, $size) {
+    // High priority so we override theme or lazy-load plugins.
+    $list = bw_get_preload_urls_for_current_page();
+    if ( ! $list ) return $attr;
+
+    $src = wp_get_attachment_image_url($attachment->ID, 'full');
+    if ( ! $src ) return $attr;
+
+    if (bw_src_matches_lcp_list($src, $list)) {
+        // Remove lazy if present and set eager.
+        $attr['loading'] = 'eager';
+        // Help the preload get top scheduling.
+        $attr['fetchpriority'] = 'high';
+        // Optional, improves first paint for hero images.
+        if (empty($attr['decoding'])) {
+            $attr['decoding'] = 'sync';
+        }
+    }
+    return $attr;
+}, 99, 3);
+
+/**
+ * 2) Hard-coded <img> in post content.
+ * Inject attributes on matching src.
+ */
+add_filter('the_content', function ($html) {
+    $list = bw_get_preload_urls_for_current_page();
+    if ( ! $list || ! $html ) return $html;
+
+    foreach ($list as $u) {
+        $u_quoted = preg_quote($u, '~');
+        // Match: <img ... src="THE_URL[maybe more]" ... >
+        $pattern = '~(<img\b[^>]*\bsrc=(["\'])' . $u_quoted . '[^"\']*\2[^>]*)(?=>)~i';
+
+        $html = preg_replace_callback($pattern, function ($m) {
+            $tag = $m[1];
+
+            // Remove loading="lazy" if present.
+            $tag = preg_replace('/\sloading=(["\'])(lazy)\1/i', '', $tag);
+
+            // Add attributes if missing.
+            if (!preg_match('/\bloading=/', $tag))       $tag .= ' loading="eager"';
+            if (!preg_match('/\bfetchpriority=/', $tag)) $tag .= ' fetchpriority="high"';
+            if (!preg_match('/\bdecoding=/', $tag))      $tag .= ' decoding="sync"';
+
+            return $tag;
+        }, $html);
+    }
+    return $html;
+}, 99);
+
 
 //Register Settings for Preload on Single Post Types
 add_action('admin_init', function () {
@@ -387,196 +499,170 @@ add_action('admin_init', function () {
 // Update the preload function to use setting
 function brighterweb_preload_featured_image() {
     if (is_singular()) {
-        $enabled = (array) get_option('brighter_preload_post_types', []);
+        $enabled   = (array) get_option('brighter_preload_post_types', []);
         $post_type = get_post_type();
 
-        if (in_array($post_type, $enabled) && has_post_thumbnail()) {
-            $image = wp_get_attachment_image_src(get_post_thumbnail_id(), 'full');
-            if ($image) {
-                echo '<link rel="preload" as="image" href="' . esc_url($image[0]) . '" />' . "\n";
+        if (in_array($post_type, $enabled, true) && has_post_thumbnail()) {
+            $id     = get_post_thumbnail_id();
+            $src    = wp_get_attachment_image_url( $id, 'full' );
+            $srcset = wp_get_attachment_image_srcset( $id, 'full' );
+            $mime   = wp_get_image_mime( $id ) ?: 'image/*';
+
+            if ( $src ) {
+                // normalise hidden path to the public one
+                $src = str_replace('/core/storage/', '/storage/', $src);
+                printf(
+                    '<link rel="preload" as="image" href="%s"%s imagesizes="100vw" type="%s" fetchpriority="high" />' . "\n",
+                    esc_url( $src ),
+                    $srcset ? ' imagesrcset="' . esc_attr( $srcset ) . '"' : '',
+                    esc_attr( $mime )
+                );
             }
         }
     }
 }
-add_action('wp_head', 'brighterweb_preload_featured_image');
-
+add_action('wp_head', 'brighterweb_preload_featured_image', 1);
 
 
 
 
 /**
- * Admin list-table: Content Status badges with AJAX save
+ * Preload + fetchpriority=high for all image URLs listed in _bw_preloads
+ * – prints <link rel="preload" as="image" ... fetchpriority="high">
+ * – also adds fetchpriority="high" to matching <img> tags at render time
  */
 
-// ---------- Column registration (posts + pages) ----------
-add_filter('manage_edit-post_columns', 'brighter_add_status_column');
-add_filter('manage_edit-page_columns', 'brighter_add_status_column');
-function brighter_add_status_column($cols) {
-    $cols['brighter_status'] = __('Content Status', 'brighter');
-    return $cols;
-}
+if ( ! function_exists( 'bw_preload_get_targets' ) ) {
+    function bw_preload_get_targets(): array {
+        if ( ! is_singular() ) return [];
 
-// ---------- Column render ----------
-add_action('manage_post_posts_custom_column', 'brighter_render_status_column', 10, 2);
-add_action('manage_page_posts_custom_column', 'brighter_render_status_column', 10, 2);
-function brighter_render_status_column($col, $post_id) {
-    if ($col !== 'brighter_status') return;
+        $urls = (array) get_post_meta( get_the_ID(), '_bw_preloads', true );
+        if ( empty( $urls ) ) return [];
 
-    $current = get_post_meta($post_id, '_brighter_content_status', true);
-
-    $map = brighter_status_options(); // key => [label, cssClass]
-    // Badge (click to cycle)
-    $label = isset($map[$current]) ? $map[$current][0] : '— Select —';
-    $css   = isset($map[$current]) ? $map[$current][1] : 'bg-gray';
-
-    printf(
-        '<button type="button" class="button brighter-status-badge %1$s" data-postid="%2$d" data-value="%3$s" aria-label="%4$s">%5$s</button>',
-        esc_attr($css),
-        (int) $post_id,
-        esc_attr($current),
-        esc_attr__('Change content status', 'brighter'),
-        esc_html($label)
-    );
-
-    // Fallback <select> for keyboard/screen-readers or if JS fails
-    echo '<noscript><select disabled>';
-    foreach ($map as $k => $def) {
-        printf('<option value="%s" %s>%s</option>',
-            esc_attr($k),
-            selected($current, $k, false),
-            esc_html($def[0])
-        );
-    }
-    echo '</select></noscript>';
-}
-
-// ---------- AJAX save ----------
-add_action('wp_ajax_brighter_save_status', function () {
-    check_ajax_referer('brighter_status_nonce', 'nonce');
-
-    $post_id = isset($_POST['post_id']) ? (int) $_POST['post_id'] : 0;
-    if (!$post_id || !current_user_can('edit_post', $post_id)) {
-        wp_send_json_error(['message' => 'No permission or bad post_id.']);
-    }
-
-    $value = isset($_POST['value']) ? sanitize_text_field(wp_unslash($_POST['value'])) : '';
-    $allowed = array_keys(brighter_status_options());
-    if (!in_array($value, $allowed, true)) {
-        wp_send_json_error(['message' => 'Invalid status value.']);
-    }
-
-    update_post_meta($post_id, '_brighter_content_status', $value);
-    $label = brighter_status_options()[$value][0];
-    wp_send_json_success(['value' => $value, 'label' => $label]);
-});
-
-// ---------- Enqueue (list screens only) ----------
-add_action('admin_enqueue_scripts', function($hook) {
-    // Both Posts and Pages lists are 'edit.php' (pages are edit.php?post_type=page)
-    if ($hook !== 'edit.php') return;
-
-    // Make sure jQuery is present
-    wp_enqueue_script('jquery');
-
-    // JS
-    wp_enqueue_script(
-        'brighter-status',
-        plugin_dir_url(__FILE__) . 'js/brighter-status.js',
-        ['jquery'],
-        '1.3',
-        true
-    );
-
-    // Localize config + nonce
-    wp_localize_script('brighter-status', 'BRIGHTER_STATUS', [
-        'ajax_url' => admin_url('admin-ajax.php'),
-        'nonce'    => wp_create_nonce('brighter_status_nonce'),
-        // send the ordered status cycle to JS
-        'cycle'    => array_keys(brighter_status_options()),
-    ]);
-
-    // CSS
-    wp_enqueue_style(
-        'brighter-status-css',
-        plugin_dir_url(__FILE__) . 'css/brighter-status.css',
-        [],
-        '1.2'
-    );
-});
-
-// ---------- Shared map ----------
-function brighter_status_options() {
-    // key => [Label, CSS class]
-    return [
-        ''            => ['— Select —',      'bg-gray'],
-        'done'        => ['Done',            'bg-green'],
-        'opt90'       => ['Optimised 90+',   'bg-emerald'],
-        'opt80'       => ['Optimised 80+',   'bg-teal'],
-        'opt70'       => ['Optimised 70+',   'bg-cyan'],
-        'improve'     => ['Improve',         'bg-orange'],
-        'leave'       => ['Leave',           'bg-slate'],
-        'consolidate' => ['Consolidate',     'bg-purple'],
-        'repurpose'   => ['Repurpose',       'bg-blue'],
-    ];
-}
-
-// Prove the hook is firing and JS runs on the list screen.
-add_action('admin_footer-edit.php', function () {
-    ?>
-    <script>
-      console.log('[Brighter] admin_footer-edit.php inline script loaded');
-      // Also log clicks to prove delegation works even if external JS is missing:
-      document.addEventListener('click', function(e){
-        if (e.target && e.target.classList.contains('brighter-status-badge')) {
-          console.log('[Brighter] badge clicked for post', e.target.dataset.postid, 'value=', e.target.dataset.value);
+        // normalise: dedupe, drop empties, fix /core/storage -> /storage
+        $seen = [];
+        foreach ( $urls as $u ) {
+            if ( ! is_scalar( $u ) ) continue;
+            $u = trim( (string) $u );
+            if ( $u === '' ) continue;
+            $u = str_replace( '/core/storage/', '/storage/', $u );
+            $seen[ $u ] = true;
         }
-      });
-    </script>
-    <?php
-});
+        $urls = array_keys( $seen );
+
+        // also keep basenames for easy <img> matching (handles resized variants)
+        $basenames = [];
+        foreach ( $urls as $u ) {
+            $p = parse_url( $u, PHP_URL_PATH );
+            if ( $p ) $basenames[ strtolower( basename( $p ) ) ] = true;
+        }
+
+        return [
+            'urls'      => $urls,          // full URLs for <link rel=preload>
+            'basenames' => $basenames,     // filename matching for <img>
+        ];
+    }
+}
+
+/** Print preloads for ALL listed images with fetchpriority=high */
+add_action( 'wp_head', function () {
+    $t = bw_preload_get_targets();
+    if ( empty( $t['urls'] ) ) return;
+
+    foreach ( $t['urls'] as $u ) {
+        $path = parse_url( $u, PHP_URL_PATH ) ?: '';
+        $ext  = strtolower( pathinfo( $path, PATHINFO_EXTENSION ) );
+
+        if ( in_array( $ext, ['jpg','jpeg','png','gif','webp','avif','svg'], true ) ) {
+            // choose MIME
+            $mime = [
+                'jpg' => 'image/jpeg','jpeg'=>'image/jpeg','png'=>'image/png','gif'=>'image/gif',
+                'webp'=>'image/webp','avif'=>'image/avif','svg'=>'image/svg+xml'
+            ][$ext] ?? 'image/*';
+
+            printf(
+                '<link rel="preload" as="image" href="%s" type="%s" fetchpriority="high" imagesizes="100vw" />' . "\n",
+                esc_url( $u ),
+                esc_attr( $mime )
+            );
+        } elseif ( $ext === 'css' ) {
+            printf( '<link rel="preload" as="style" href="%s" />' . "\n", esc_url( $u ) );
+        } elseif ( in_array( $ext, ['js','mjs'], true ) ) {
+            printf( '<link rel="preload" as="script" href="%s" />' . "\n", esc_url( $u ) );
+        } elseif ( in_array( $ext, ['woff2','woff','ttf','otf'], true ) ) {
+            $mime = $ext === 'woff2' ? 'font/woff2' : ($ext === 'woff' ? 'font/woff' : ($ext === 'ttf' ? 'font/ttf' : 'font/otf'));
+            printf(
+                '<link rel="preload" as="font" href="%s" type="%s" crossorigin />' . "\n",
+                esc_url( $u ), esc_attr( $mime )
+            );
+        }
+    }
+}, 1 );
+
+/** Add fetchpriority=high to matching <img> elements (for builders/themes output) */
+add_filter( 'wp_get_attachment_image_attributes', function ( $attrs ) {
+    $t = bw_preload_get_targets();
+    if ( empty( $t['basenames'] ) || empty( $attrs['src'] ) ) return $attrs;
+
+    $name = strtolower( basename( parse_url( $attrs['src'], PHP_URL_PATH ) ) );
+    if ( isset( $t['basenames'][ $name ] ) ) {
+        $attrs['fetchpriority'] = 'high';
+        // optional: force eager load for true hero images
+        // $attrs['loading'] = 'eager';
+    }
+    return $attrs;
+}, 10 );
+
+/** Backup: inject fetchpriority=high into first match in post content HTML (non-attachment imgs) */
+add_filter( 'the_content', function ( $html ) {
+    $t = bw_preload_get_targets();
+    if ( empty( $t['basenames'] ) || stripos( $html, '<img' ) === false ) return $html;
+
+    // Add to every matching <img ...> in the content (not just first)
+    return preg_replace_callback(
+        '/<img\b[^>]*\bsrc=["\']([^"\']+)["\'][^>]*>/i',
+        function ( $m ) use ( $t ) {
+            $src  = $m[1];
+            $name = strtolower( basename( parse_url( $src, PHP_URL_PATH ) ) );
+            if ( isset( $t['basenames'][ $name ] ) && stripos( $m[0], 'fetchpriority=' ) === false ) {
+                return preg_replace('/^<img/i', '<img fetchpriority="high"', $m[0]);
+            }
+            return $m[0];
+        },
+        $html
+    );
+}, 20 );
+
+
 /**
- * Enqueue list-table assets from the MU plugin root, even though this file lives in /includes/.
+ * Normalise image preloads and add fetchpriority=high
+ * - Converts /core/storage/ to /storage/
+ * - Adds fetchpriority="high" to <link rel="preload" as="image"> tags that lack it
  */
-add_action('admin_enqueue_scripts', function ($hook) {
-    if ($hook !== 'edit.php') return; // posts & pages list screens
+add_action('template_redirect', function () {
+    // Only buffer full HTML responses
+    if ( is_feed() || is_admin() || wp_doing_ajax() ) { return; }
+    if ( defined('REST_REQUEST') && REST_REQUEST ) { return; }
 
-    // 1) Point to the MU plugin ROOT using the core loader file.
-    $root_file = dirname(__DIR__) . '/brighter-core.php'; // …/mu-plugins/brighter-core/brighter-core.php
-    $root_url  = plugin_dir_url($root_file);              // => /wp-content/mu-plugins/brighter-core/
-    $root_path = plugin_dir_path($root_file);             // => filesystem path to that folder
+    ob_start(function ($html) {
+        // Normalise hidden path to public one
+        $html = str_replace('/core/storage/', '/storage/', $html);
 
-    // 2) Asset locations relative to the ROOT.
-    $js_rel  = 'js/brighter-status.js';
-    $css_rel = 'css/brighter-status.css'; // optional; inline fallback provided
+        // Add fetchpriority="high" to image preloads that don't have it
+        $html = preg_replace_callback(
+            '#<link\s+([^>]*\brel=["\']preload["\'][^>]*\bas=["\']image["\'][^>]*)>#i',
+            function ($m) {
+                $tag = $m[0];
+                // Already has fetchpriority?
+                if ( stripos($tag, 'fetchpriority=') !== false ) {
+                    return $tag;
+                }
+                // Inject before closing ">"
+                return rtrim($tag, '>') . ' fetchpriority="high">';
+            },
+            $html
+        );
 
-    $js_url  = $root_url  . $js_rel;
-    $css_url = $root_url  . $css_rel;
-    $js_path = $root_path . $js_rel;
-    $css_path= $root_path . $css_rel;
-
-    $js_ver  = file_exists($js_path)  ? filemtime($js_path)  : '1.0';
-    $css_ver = file_exists($css_path) ? filemtime($css_path) : '1.0';
-
-    wp_enqueue_script('jquery');
-
-    wp_enqueue_script('brighter-status', $js_url, ['jquery'], $js_ver, true);
-    wp_localize_script('brighter-status', 'BRIGHTER_STATUS', [
-        'ajax_url' => admin_url('admin-ajax.php'),
-        'nonce'    => wp_create_nonce('brighter_status_nonce'),
-        'cycle'    => array_keys(brighter_status_options()),
-    ]);
-
-    // Optional external CSS + inline fallback so badges never appear as tiny blank squares
-    wp_enqueue_style('brighter-status-css', $css_url, [], $css_ver);
-    wp_add_inline_style('brighter-status-css', '
-      .brighter-status-badge{border-radius:9999px;padding:2px 10px;line-height:1.6;border:0;color:#fff;font-weight:600;cursor:pointer;background:#6b7280}
-      .brighter-status-badge.is-saving{opacity:.6;pointer-events:none}
-      .bg-gray{background:#6b7280}.bg-green{background:#16a34a}.bg-emerald{background:#059669}.bg-teal{background:#0d9488}
-      .bg-cyan{background:#0891b2}.bg-orange{background:#f59e0b}.bg-slate{background:#475569}.bg-purple{background:#7c3aed}.bg-blue{background:#2563eb}
-    ');
-
-    // Tiny console ping so you can see it's loaded
-    add_action('admin_footer-edit.php', function () {
-        echo "<script>console.log('[Brighter] status assets enqueued from MU root');</script>";
+        return $html;
     });
 });

@@ -1,5 +1,9 @@
 <?php
 // Exit if accessed directly
+//// Add an og:logo meta tag site‑wide
+//Use our 1200x630 "og-image" size for single posts
+
+
 if (!defined('ABSPATH')) exit;
 
 add_action('admin_init', function () {
@@ -67,3 +71,26 @@ add_action('admin_init', function () {
         echo '<p>More performance tools coming soon...</p>';
     }, 'brighter_optimisation_page');
 });
+// Add an og:logo meta tag site‑wide
+add_action( 'wp_head', function() {
+    // Only run on the front end
+    if ( !is_admin() ) {
+        $logo = get_option( 'your_logo_option' ); // or pull from SEOPress settings
+        if ( $logo ) {
+            echo '<meta property="og:logo" content="' . esc_url( $logo ) . '">' . "\n";
+        }
+    }
+} );
+
+
+// Use our 1200x630 "og-image" size for single posts
+add_filter( 'seopress_social_og_image', function( $url, $post_id ) {
+    if ( has_post_thumbnail( $post_id ) ) {
+        // get the 1200x630 version, fall back to full if not available
+        $new_url = wp_get_attachment_image_url( get_post_thumbnail_id( $post_id ), 'og-image' );
+        if ( $new_url ) {
+            return $new_url;
+        }
+    }
+    return $url;
+}, 10, 2 );

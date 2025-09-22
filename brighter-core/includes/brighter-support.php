@@ -3,50 +3,65 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 // Design Credit Hook  
-add_action( 'wp_footer', function () {
-    // Dynamically get site info
+// Head markup: JSON-LD only (no non-standard meta in body)
+add_action( 'wp_head', function () {
+    if ( is_admin() || is_feed() || ( defined('REST_REQUEST') && REST_REQUEST ) ) {
+        return;
+    }
+
     $site_name = get_bloginfo( 'name' );
-    $site_url  = home_url();
+    $site_url  = home_url( '/' );
+
+    // If your SEO plugin already outputs WebSite schema, avoid duplication:
+    // if ( function_exists('seopress') ) { return; }
+
+    $schema = [
+        '@context'   => 'https://schema.org',
+        '@type'      => 'WebSite',
+        'name'       => $site_name,
+        'url'        => $site_url,
+        'publisher'  => [
+            '@type' => 'Organization',
+            'name'  => 'Brighter Websites',
+            'url'   => 'https://brighterwebsites.com.au',
+        ],
+    ];
+
+    echo "\n<script type=\"application/ld+json\">" . wp_json_encode( $schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . "</script>\n";
+}, 20 );
+
+// Footer branding: comment and visible credit link
+add_action( 'wp_footer', function () {
+    if ( is_admin() || is_feed() || ( defined('REST_REQUEST') && REST_REQUEST ) ) {
+        return;
+    }
 
     // Hidden attribution comment
     echo "\n<!-- Website built by Brighter Websites - https://brighterwebsites.com.au -->\n";
-
-    // Publisher meta tag
-    echo "\n<meta name=\"publisher\" content=\"Brighter Websites\">\n";
-
-    // Schema JSON-LD
-    echo '
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "name": "' . esc_js( $site_name ) . '",
-  "url": "' . esc_url( $site_url ) . '",
-  "publisher": {
-    "@type": "Organization",
-    "name": "Brighter Websites",
-    "url": "https://brighterwebsites.com.au"
-  }
-}
-</script>
-';
 }, 99 );
 
-function brighter_credit_shortcode() {
-    // Hide only on blog post single views
-    if ( is_single() && get_post_type() === 'post' ) {
+// Shortcode: [brighter_credit hide_on_posts="yes"]
+function brighter_credit_shortcode( $atts ) {
+    $atts = shortcode_atts( [
+        'hide_on_posts' => 'yes',
+    ], $atts, 'brighter_credit' );
+
+    // Hide on single blog posts, if requested
+    if ( 'yes' === strtolower( $atts['hide_on_posts'] ) && is_single() && get_post_type() === 'post' ) {
         return '';
     }
 
-    // Get site name and convert to slug
-    $site_name   = get_bloginfo( 'name' );
-    $utm_source  = sanitize_title( $site_name );
+    $utm_source = sanitize_title( get_bloginfo( 'name' ) );
+    $url = add_query_arg( [
+        'utm_source'   => $utm_source,
+        'utm_medium'   => 'footer',
+        'utm_campaign' => 'site-credit',
+    ], 'https://brighterwebsites.com.au/' );
 
-    // Build tracked URL
-    $url = 'https://brighterwebsites.com.au/?utm_source=' . $utm_source . '&utm_medium=footer&utm_campaign=site-credit';
-
-    // Return the credit
-    return 'Proudly Built by <a href="' . esc_url( $url ) . '" target="_blank" rel="noopener"><strong>BRIGHTER WEBSITES</strong></a>';
+    return sprintf(
+        'Proudly Built by <a href="%s" target="_blank" rel="noopener"><strong>BRIGHTER WEBSITES</strong></a>',
+        esc_url( $url )
+    );
 }
 add_shortcode( 'brighter_credit', 'brighter_credit_shortcode' );
 
